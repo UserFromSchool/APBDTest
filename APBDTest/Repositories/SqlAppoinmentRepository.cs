@@ -208,7 +208,7 @@ public class SqlAppoinmentRepository(IConfiguration configuration) : IAppointmen
             {
                 using (var command =
                        new SqlCommand(
-                           "INSERT INTO APPOINTMENT (appointment_id, service_id, service_fee) VALUES (@appointment_id, @service_id, @fee)",
+                           "INSERT INTO APPOINTMENT_SERVICE (appointment_id, service_id, service_fee) VALUES (@appointment_id, @service_id, @fee)",
                            connection))
                 {
                     // If I had time I would add transatioon with begintranstinAsync and command.Transaction set (try-cathc)
