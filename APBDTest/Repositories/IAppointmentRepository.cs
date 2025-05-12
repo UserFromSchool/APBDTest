@@ -15,4 +15,6 @@ public interface IAppointmentRepository
 
     public Task<List<ServiceDTO>> FindServices(int appointmentId);
 
+    public Task<string> AddAppointment(AppointmentNewRequestDTO request);
+
 }

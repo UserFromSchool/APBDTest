@@ -115,5 +115,112 @@ public class SqlAppoinmentRepository(IConfiguration configuration) : IAppointmen
         }
         return services;
     }
+
+    public async Task<string> AddAppointment(AppointmentNewRequestDTO request)
+    {
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            await connection.OpenAsync();
+            
+            using (var command = new SqlCommand("SELECT * FROM APPOINTMENT WHERE appointment_id = @AppointmentId",
+                       connection))
+            {
+                var found = false;
+                command.Parameters.AddWithValue("@AppointmentId", request.AppointmentId);
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (found)
+                {
+                    return "Appointment already exists.";
+                }
+            }
+
+            using (var command = new SqlCommand("SELECT * FROM PATIENT WHERE patient_id = @Id",
+                       connection))
+            {
+                var found = false;
+                command.Parameters.AddWithValue("@Id", request.PatientId);
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    return "Patient does not exist.";
+                }
+            }
+            
+            
+            using (var command = new SqlCommand("SELECT * FROM PATIENT WHERE pwz = @Pwz",
+                       connection))
+            {
+                var found = false;
+                command.Parameters.AddWithValue("@Pwz", request.Pwz);
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    return "Doctor with given PWZ does not exist.";
+                }
+            }
+            
+            var ids = new List<int>();
+            using (var command = new SqlCommand("SELECT name, service_id FROM Service",
+                       connection))
+            {
+                var names = new List<string>();
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        names.Add(reader.GetString(reader.GetOrdinal("name")));
+                        ids.Add(reader.GetInt32(reader.GetOrdinal("service_id")));
+                    }
+                }
+
+                var foundServices = request.Services.FindAll(name => names.Contains(name.Name));
+                if (foundServices.Count != request.Services.Count)
+                {
+                    return "Some or all service names does not exists.";
+                }
+            }
+            
+            for (var i = 0; i < ids.Count; i++)
+            {
+                using (var command =
+                       new SqlCommand(
+                           "INSERT INTO APPOINTMENT (appointment_id, service_id, service_fee) VALUES (@appointment_id, @service_id, @fee)",
+                           connection))
+                {
+                    // If I had time I would add transatioon with begintranstinAsync and command.Transaction set (try-cathc)
+                    command.Parameters.AddWithValue("@appointment_id", request.AppointmentId);
+                    command.Parameters.AddWithValue("@service_id", ids[i]);
+                    command.Parameters.AddWithValue("@fee", request.Services[i].ServiceFee);
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+        }
+        
+        return "Success";
+    }
     
 }

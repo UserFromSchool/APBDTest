@@ -37,4 +37,9 @@ public class AppointmentService(IAppointmentRepository appointmentRepository) : 
         };
     }
 
+    public async Task<string> AddAppointment(AppointmentNewRequestDTO request)
+    {
+        return await _appointmentRepository.AddAppointment(request);
+    }
+
 }

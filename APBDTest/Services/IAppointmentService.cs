@@ -8,4 +8,6 @@ public interface IAppointmentService
 
     public Task<AppointmentInfoReponseDTO> GetAppointmentInfo(int appointmentId);
 
+    public Task<string> AddAppointment(AppointmentNewRequestDTO request);
+
 }

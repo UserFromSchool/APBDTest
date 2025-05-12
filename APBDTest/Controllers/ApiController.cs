@@ -25,7 +25,13 @@ public class ApiController(IAppointmentService service) : Controller
     [HttpPost("/appointments")]
     public async Task<IActionResult> AddAppointment([FromBody] AppointmentNewRequestDTO request)
     {
-        
+        var info = await _service.AddAppointment(request);
+        if (info != "Success")
+        {
+            return BadRequest(info);
+        }
+
+        return Ok(info);
     }
     
 }
